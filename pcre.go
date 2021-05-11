@@ -55,6 +55,7 @@ package pcre
 
 // #cgo linux LDFLAGS: -L${SRCDIR}/lib/linux -lpcre
 // #cgo darwin LDFLAGS: -L${SRCDIR}/lib/osx -lpcre
+// #cgo windows LDFLAGS: -L${SRCDIR}/lib/windows -lpcre
 // #include <string.h>
 // #include "./pcre_fallback.h"
 // #include "./pcre.h"
