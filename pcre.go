@@ -53,9 +53,10 @@
 // http://www.pcre.org/pcre.txt
 package pcre
 
-// #include <pcre.h>
+// #cgo LDFLAGS: -L${SRCDIR}/pcre/lib -lpcre
 // #include <string.h>
 // #include "./pcre_fallback.h"
+// #include "./pcre/include/pcre.h"
 import "C"
 
 import (
@@ -74,8 +75,7 @@ const (
 	NEWLINE_CR      = C.PCRE_NEWLINE_CR
 	NEWLINE_CRLF    = C.PCRE_NEWLINE_CRLF
 	NEWLINE_LF      = C.PCRE_NEWLINE_LF
-	// NO_START_OPTIMIZE = C.PCRE_NO_START_OPTIMIZE
-	NO_UTF8_CHECK = C.PCRE_NO_UTF8_CHECK
+	NO_UTF8_CHECK   = C.PCRE_NO_UTF8_CHECK
 )
 
 // Flags for Compile functions
@@ -93,7 +93,6 @@ const (
 	NO_AUTO_CAPTURE   = C.PCRE_NO_AUTO_CAPTURE
 	UNGREEDY          = C.PCRE_UNGREEDY
 	UTF8              = C.PCRE_UTF8
-	// UCP               = C.PCRE_UCP
 )
 
 // Flags for Match functions
@@ -101,16 +100,6 @@ const (
 	NOTBOL   = C.PCRE_NOTBOL
 	NOTEOL   = C.PCRE_NOTEOL
 	NOTEMPTY = C.PCRE_NOTEMPTY
-	// NOTEMPTY_ATSTART = C.PCRE_NOTEMPTY_ATSTART
-	// PARTIAL_HARD     = C.PCRE_PARTIAL_HARD
-	// PARTIAL_SOFT = C.PCRE_PARTIAL_SOFT
-)
-
-// Flags for Study function
-const (
-	// STUDY_JIT_COMPILE              = C.PCRE_STUDY_JIT_COMPILE
-	// STUDY_JIT_PARTIAL_SOFT_COMPILE = C.PCRE_STUDY_JIT_PARTIAL_SOFT_COMPILE
-	// STUDY_JIT_PARTIAL_HARD_COMPILE = C.PCRE_STUDY_JIT_PARTIAL_HARD_COMPILE
 )
 
 // Exec-time and get/set-time error codes
@@ -132,7 +121,6 @@ const (
 	ERROR_RECURSIONLIMIT = C.PCRE_ERROR_RECURSIONLIMIT
 	ERROR_INTERNAL       = C.PCRE_ERROR_INTERNAL
 	ERROR_BADCOUNT       = C.PCRE_ERROR_BADCOUNT
-	// ERROR_JIT_STACKLIMIT = C.PCRE_ERROR_JIT_STACKLIMIT
 )
 
 // Regexp holds a reference to a compiled regular expression.
@@ -192,18 +180,6 @@ func Compile(pattern string, flags int) (Regexp, error) {
 	return heap, nil
 }
 
-// CompileJIT is a combination of Compile and Study. It first compiles
-// the pattern and if this succeeds calls Study on the compiled pattern.
-// comFlags are Compile flags, jitFlags are study flags.
-// If compilation fails, the second return value holds a *CompileError.
-// func CompileJIT(pattern string, comFlags, jitFlags int) (Regexp, error) {
-// 	re, err := Compile(pattern, comFlags)
-// 	if err == nil {
-// 		err = (&re).Study(jitFlags)
-// 	}
-// 	return re, err
-// }
-
 // MustCompile compiles the pattern.  If compilation fails, panic.
 func MustCompile(pattern string, flags int) (re Regexp) {
 	re, err := Compile(pattern, flags)
@@ -212,48 +188,6 @@ func MustCompile(pattern string, flags int) (re Regexp) {
 	}
 	return
 }
-
-// MustCompileJIT compiles and studies the pattern.  On failure it panics.
-// func MustCompileJIT(pattern string, comFlags, jitFlags int) (re Regexp) {
-// 	re, err := CompileJIT(pattern, comFlags, jitFlags)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	return
-// }
-
-// Study adds Just-In-Time compilation to a Regexp. This may give a huge
-// speed boost when matching. If an error occurs, return value is non-nil.
-// Flags optionally specifies JIT compilation options for partial matches.
-// func (re *Regexp) Study(flags int) error {
-// 	if re.extra != nil {
-// 		return fmt.Errorf("Study: Regexp has already been optimized")
-// 	}
-// 	if flags == 0 {
-// 		flags = STUDY_JIT_COMPILE
-// 	}
-//
-// 	ptr := (*C.pcre)(unsafe.Pointer(&re.ptr[0]))
-// 	var err *C.char
-// 	extra := C.pcre_study(ptr, C.int(flags), &err)
-// 	if err != nil {
-// 		return fmt.Errorf("%s", C.GoString(err))
-// 	}
-// 	if extra == nil {
-// 		// Studying the pattern may not produce useful information.
-// 		return nil
-// 	}
-// 	defer C.free(unsafe.Pointer(extra))
-//
-// 	var size C.size_t
-// 	rc := C.pcre_fullinfo(ptr, extra, C.PCRE_INFO_JITSIZE, unsafe.Pointer(&size))
-// 	if rc != 0 || size == 0 {
-// 		return fmt.Errorf("Study failed to obtain JIT size (%d)", int(rc))
-// 	}
-// 	re.extra = make([]byte, size)
-// 	C.memcpy(unsafe.Pointer(&re.extra[0]), unsafe.Pointer(extra), size)
-// 	return nil
-// }
 
 // Groups returns the number of capture groups in the compiled pattern.
 func (re Regexp) Groups() int {
