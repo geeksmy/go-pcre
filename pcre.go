@@ -53,10 +53,11 @@
 // http://www.pcre.org/pcre.txt
 package pcre
 
-// #cgo LDFLAGS: -L${SRCDIR}/pcre/lib -lpcre
+// #cgo linux LDFLAGS: -L${SRCDIR}/lib/linux -lpcre
+// #cgo darwin LDFLAGS: -L${SRCDIR}/lib/osx -lpcre
 // #include <string.h>
 // #include "./pcre_fallback.h"
-// #include "./pcre/include/pcre.h"
+// #include "./pcre.h"
 import "C"
 
 import (
